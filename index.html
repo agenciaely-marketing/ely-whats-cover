@@ -200,7 +200,9 @@ header{
 
 @media (max-width: 768px){
 
+  html,
   body{
+    min-height:100%;
     height:auto;
     overflow:auto;
   }
@@ -212,9 +214,33 @@ header{
     gap:.7rem;
   }
 
-  .logo{
-    gap:8px;
-    min-width:0;
+  .workspace{
+    flex-direction:column;
+    height:auto;
+    overflow:visible;
+  }
+
+  .sidebar{
+    width:100%;
+    border-right:none;
+    border-bottom:1px solid var(--border);
+    overflow:visible;
+  }
+
+  .canvas-area{
+    width:100%;
+    min-height:360px;
+    padding:1rem;
+    overflow:hidden;
+  }
+
+  .btn-dl{
+    position:sticky;
+    bottom:12px;
+    z-index:20;
+    margin:.8rem 1rem 1rem;
+    min-height:48px;
+    box-shadow:0 12px 30px #0008;
   }
 
   .ely-logo{
@@ -232,60 +258,6 @@ header{
     white-space:nowrap;
   }
 
-  .workspace{
-    flex-direction:column;
-    overflow:visible;
-  }
-
-  .sidebar{
-    width:100%;
-    max-height:none;
-    border-right:none;
-    border-bottom:1px solid var(--border);
-    overflow:visible;
-  }
-
-  .section{
-    padding:.9rem 1rem;
-  }
-
-  .upload-zone{
-    padding:.9rem .75rem;
-  }
-
-  .canvas-area{
-    width:100%;
-    min-height:360px;
-    padding:1rem;
-    overflow:hidden;
-  }
-
-  .canvas-wrap{
-    max-width:100%;
-    border-radius:10px;
-  }
-
-  .empty-state{
-    padding:0 2rem;
-  }
-
-  .empty-state .icon{
-    font-size:2.4rem;
-  }
-
-  .empty-state p{
-    font-size:.82rem;
-  }
-
-  .btn-dl{
-    position:sticky;
-    bottom:12px;
-    z-index:20;
-    margin:.8rem 1rem 1rem;
-    min-height:48px;
-    box-shadow:0 12px 30px #0008;
-  }
-
   .handle{
     width:18px;
     height:18px;
@@ -295,17 +267,35 @@ header{
   .handle.ne{top:-9px;right:-9px}
   .handle.sw{bottom:-9px;left:-9px}
   .handle.se{bottom:-9px;right:-9px}
+}
 
-  #logoOverlay.active .handle,
-  #logoOverlay:hover .handle{
-    opacity:1;
+@media (min-width: 769px){
+
+  html,
+  body{
+    width:100%;
+    height:100vh;
+    overflow:hidden;
   }
 
-  .tooltip{
-    bottom:.75rem;
-    font-size:.68rem;
-    max-width:90%;
-    text-align:center;
+  .workspace{
+    height:calc(100vh - 56px);
+    overflow:hidden;
+  }
+
+  .sidebar{
+    width:300px;
+    height:100%;
+    overflow-y:auto;
+  }
+
+  .canvas-area{
+    height:100%;
+    overflow:hidden;
+  }
+
+  .btn-dl{
+    position:static;
   }
 }
 </style>
@@ -449,10 +439,11 @@ function fitCanvas(){
 
   const area=document.getElementById('canvasArea');
   const isMobile=window.innerWidth<=768;
-  const pad=isMobile ? 24 : 48;
+
+  const pad=isMobile ? 24 : 64;
 
   const aw=area.clientWidth-pad;
-  const ah=isMobile ? 340 : area.clientHeight-pad;
+  const ah=area.clientHeight-pad;
 
   const iw=state.baseImg.naturalWidth;
   const ih=state.baseImg.naturalHeight;
