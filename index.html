@@ -298,6 +298,125 @@ header{
     position:static;
   }
 }
+
+.align-tools{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:.6rem;
+}
+
+.align-tools .guide-btn{
+  grid-column:1 / -1;
+}
+
+.mini-btn{
+  border:1px solid var(--border);
+  background:var(--surface2);
+  color:var(--text);
+  border-radius:10px;
+  padding:.7rem .8rem;
+  font-size:.76rem;
+  font-weight:700;
+  cursor:pointer;
+  transition:.2s;
+  min-height:44px;
+}
+
+.icon-btn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:.45rem;
+  font-size:1rem;
+}
+
+.icon-btn span{
+  font-size:.72rem;
+  font-weight:700;
+}
+
+.mini-btn:hover{
+  border-color:var(--accent);
+  background:#2563eb17;
+}
+
+.mini-btn.active{
+  border-color:var(--accent2);
+  color:var(--accent2);
+  background:#38bdf817;
+}
+
+.center-guides{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  display:none;
+  z-index:3;
+}
+
+.center-guides.show{
+  display:block;
+}
+
+.guide{
+  position:absolute;
+  background:#38bdf8;
+  box-shadow:0 0 12px #38bdf8aa;
+  opacity:.9;
+}
+
+.guide-v{
+  width:1px;
+  height:100%;
+  left:50%;
+  top:0;
+}
+
+.guide-h{
+  height:1px;
+  width:100%;
+  left:0;
+  top:50%;
+}
+
+.loading{
+  position:absolute;
+  inset:0;
+  background:#070b14cc;
+  backdrop-filter:blur(8px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:.8rem;
+  z-index:50;
+  color:var(--text);
+  font-size:.85rem;
+  font-weight:600;
+}
+
+.loading.show{
+  display:flex;
+}
+
+.loader{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  border:3px solid #1e3058;
+  border-top-color:var(--accent2);
+  animation:spin .8s linear infinite;
+}
+
+@keyframes spin{
+  to{transform:rotate(360deg)}
+}
+
+.icon-btn{
+  font-size:1.2rem;
+  font-weight:700;
+}
+
 </style>
 </head>
 <body>
@@ -351,6 +470,26 @@ header{
     </div>
 
     <div class="section">
+      <div class="section-title">Alinhamento</div>
+
+      <div class="align-tools">
+        <button type="button" class="mini-btn guide-btn" id="guideToggle">
+          ✚ Mostrar guias
+        </button>
+
+        <button type="button" class="mini-btn icon-btn" id="centerHBtn" title="Centralizar Horizontalmente">
+          ↔
+          <span>Horizontal</span>
+        </button>
+
+        <button type="button" class="mini-btn icon-btn" id="centerVBtn" title="Centralizar Verticalmente">
+          ↕
+          <span>Vertical</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="section">
       <div class="section-title">💡 Como usar</div>
       <div class="hint">
         <span>Arraste</span> o logo para reposicionar.<br/>
@@ -374,6 +513,11 @@ header{
 
     <div class="canvas-wrap" id="canvasWrap" style="display:none">
       <canvas id="mainCanvas"></canvas>
+
+      <div class="center-guides" id="centerGuides">
+        <span class="guide guide-v"></span>
+        <span class="guide guide-h"></span>
+      </div>
       <div id="logoOverlay">
         <img id="overlayImg" src="" alt=""/>
         <div class="handle nw" data-corner="nw"></div>
@@ -382,6 +526,11 @@ header{
         <div class="handle se" data-corner="se"></div>
       </div>
     </div>
+
+    <div class="loading" id="loading">
+  <div class="loader"></div>
+  <span>Carregando imagem...</span>
+</div>
 
     <div class="tooltip" id="tooltip">Logo posicionado ✓</div>
   </div>
@@ -408,6 +557,11 @@ const emptyState   = document.getElementById('emptyState');
 const downloadBtn  = document.getElementById('downloadBtn');
 const whiteToggle  = document.getElementById('whiteToggle');
 const tooltip      = document.getElementById('tooltip');
+const centerGuides = document.getElementById('centerGuides');
+const guideToggle = document.getElementById('guideToggle');
+const centerHBtn = document.getElementById('centerHBtn');
+const centerVBtn = document.getElementById('centerVBtn');
+const loading = document.getElementById('loading');
 
 // ── Load helpers ───────────────────────────────────────
 function loadImageFromFile(file){
@@ -501,10 +655,61 @@ function syncLogoFromOverlay(){
   render();
 }
 
+function setLoadingWithDelay(show){
+  clearTimeout(window.loadingTimer);
+
+  if(show){
+    window.loadingTimer = setTimeout(()=>{
+      loading.classList.add('show');
+    }, 250);
+  }else{
+    loading.classList.remove('show');
+  }
+}
+
+function centerLogoHorizontal(){
+  if(!state.baseImg || !state.logoImgOriginal) return;
+
+  const W = state.baseImg.naturalWidth;
+  state.logo.x = (W - state.logo.w) / 2;
+
+  syncOverlay();
+  render();
+  showTooltip('Logo centralizado na horizontal ✓');
+}
+
+function centerLogoVertical(){
+  if(!state.baseImg || !state.logoImgOriginal) return;
+
+  const H = state.baseImg.naturalHeight;
+  state.logo.y = (H - state.logo.h) / 2;
+
+  syncOverlay();
+  render();
+  showTooltip('Logo centralizado na vertical ✓');
+}
+
+guideToggle.addEventListener('click',()=>{
+  centerGuides.classList.toggle('show');
+  guideToggle.classList.toggle('active');
+
+  guideToggle.textContent = centerGuides.classList.contains('show')
+    ? 'Ocultar guias'
+    : 'Mostrar guias';
+});
+
+centerHBtn.addEventListener('click',centerLogoHorizontal);
+centerVBtn.addEventListener('click',centerLogoVertical);
+
 // ── Base image upload ──────────────────────────────────
-document.getElementById('baseInput').addEventListener('change',async e=>{
-  const file=e.target.files[0];if(!file)return;
-  state.baseImg=await loadImageFromFile(file);
+  document.getElementById('baseInput').addEventListener('change',async e=>{
+    const file=e.target.files[0];if(!file)return;
+
+    setLoadingWithDelay(true);
+
+    state.baseImg=await loadImageFromFile(file);
+
+    setLoadingWithDelay(false);
   document.getElementById('baseName').textContent=file.name;
   document.getElementById('baseZone').classList.add('has-file');
   const url=URL.createObjectURL(file);
@@ -520,8 +725,13 @@ document.getElementById('baseInput').addEventListener('change',async e=>{
 // ── Logo upload ────────────────────────────────────────
 document.getElementById('logoInput').addEventListener('change',async e=>{
   const file=e.target.files[0];if(!file)return;
+
+  setLoadingWithDelay(true);
+
   state.logoImgOriginal=await loadImageFromFile(file);
   state.logoImgWhite=await makeWhiteVersion(state.logoImgOriginal);
+
+  setLoadingWithDelay(false);
   document.getElementById('logoName').textContent=file.name;
   document.getElementById('logoZone').classList.add('has-file');
   const url=URL.createObjectURL(file);
